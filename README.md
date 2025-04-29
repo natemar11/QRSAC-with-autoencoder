@@ -1,9 +1,11 @@
 # QRSAC
 Implementation of Quantile Regression Soft Actor Critic (QRSAC) from "Outracing champion Gran Turismo drivers with deep reinforcement learning" by Peter R. Wurman, Samuel Barrett, Kenta Kawamoto, James MacGlashan, Kaushik Subramanian, Thomas J. Walsh, Roberto Capobianco, Alisa Devlic, Franziska Eckert, Florian Fuchs, Leilani Gilpin, Piyush Khandelwal, Varun Kompella, HaoChih Lin, Patrick MacAlpine, Declan Oller, Takuma Seno, Craig Sherstan, Michael D. Thomure, Houmehr Aghabozorgi, Leon Barrett, Rory Douglas, Dion Whitehead, Peter Dürr, Peter Stone, Michael Spranger & Hiroaki Kitano. [[Paper]](https://www.nature.com/articles/s41586-021-04357-7). 
 
+This repository offers a framework to test both a standard and curriculum learning approach with the goal to test if the curriculum learning approach is more sample efficient
+
 This repository is based on [RLkit](https://github.com/vitchyr/rlkit) and [DSAC](https://github.com/xtma/dsac), two popular reinforcement learning frameworks implemented in PyTorch.
 
-This repository is also heavily adapted from [[Code]](https://github.com/shilpa2301/QRSAC)
+This repository uses and is heavily adapted from [[Code]](https://github.com/shilpa2301/QRSAC)
 
 ## Requirements
 - python 3.10+
@@ -30,6 +32,18 @@ Then to train the autoencoder run
 python -m ae.train_ae --n-epochs 400 --batch-size 8 --z-size 32 -f {folder where you saved from first command} --verbose 1
 ```
 To use you autoencoder replace `ae_path` in `configs/donkeycar.yaml` with `logs/your_ae_file`
+
+## Standard vs Curriculum Learning Approach
+By default the training will run 450 epochs. The curriculum learning training will run three stages of training of 150 epochs each. The three stages have the following descriptions:
+    Stage 0: BEGINNER STAGE: Focus on basic track following with slight reward for speed
+    Stage 1: INTERMEDIATE STAGE: Introducing more speed while maintaining track position
+    Stage 2: ADVANCED STAGE: Optimizing for speed
+
+The specific changes to the reward function can be found in `curriculum.py'
+
+The stage 2 (final) reward function is identical to the reward function used for all 450 eopchs in the standard approach
+
+
 ## Experiments
 Two different experiments are run to determine if the curriculum learning approach is more sample efficient
 
