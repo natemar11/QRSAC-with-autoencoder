@@ -3,7 +3,7 @@ Implementation of Quantile Regression Soft Actor Critic (QRSAC) from "Outracing 
 
 This repository is based on [RLkit](https://github.com/vitchyr/rlkit) and [DSAC](https://github.com/xtma/dsac), two popular reinforcement learning frameworks implemented in PyTorch.
 
-The github code link: [[Code]](https://github.com/shilpa2301/QRSAC)
+This repository is also heavily adapted from [[Code]](https://github.com/shilpa2301/QRSAC)
 
 ## Requirements
 - python 3.10+
@@ -20,6 +20,7 @@ Set `--mode curriculum`, your program will use the curriculum learning framework
 
 This approach uses an autoencoder which can be found under `/logs/ae-32_1745884521_best.pkl`
 
+## Autoencoder Setup
 To train your own autoencoder to then use for training first run
 ```
 python record_data_ae.py -f {your desired save folder}
