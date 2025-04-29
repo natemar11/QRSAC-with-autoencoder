@@ -10,22 +10,37 @@ The github code link: [[Code]](https://github.com/shilpa2301/QRSAC)
 - All dependencies are available in requirements.txt and environment.yml
 
 ## Usage
-You can write your experiment settings in configs/your_config.yaml and run with 
+To run donkeycar you can write your experiment settings in configs/donkeycar.yaml and run with 
 ```
 python qrsac.py --config your_config.yaml --gpu 0 --seed 0
 ```
 Set `--gpu -1`, your program will run on CPU.
 
+Set `--mode curriculum`, your program will use the curriculum learning framework
+
+This approach uses an autoencoder which can be found under `/logs/ae-32_1745884521_best.pkl`
+
+To train your own autoencoder to then use for training first run
+```
+python record_data_ae.py -f {your desired save folder}
+```
+Then to train the autoencoder run
+```
+python -m ae.train_ae --n-epochs 400 --batch-size 8 --z-size 32 -f {folder where you saved from first command} --verbose 1
+```
+To use you autoencoder replace `ae_path` in `configs/donkeycar.yaml` with `logs/your_ae_file`
 ## Experiments
-2 different experiments are conducted to validate the working of the QRSAC algorithm - on a donkercar simulator and on a real-world scaled RC car (Jetracer).
+Two different experiments are run to determine if the curriculum learning approach is more sample efficient
 
-### Experiments on DonkeyCar
+To test the final policy for the standard (non-curriculum learning) approach run
+```
+python eval_script.py --checkpoint './eval_models/StandardParams.pkl'
+```
 
-<img src='./readme_media/DonkeyCar.gif'>
-
-### Experiments on JetRacer
-
-<img src='./readme_media/Jetracer.gif'>
+To test the final policy for the curriculum learning approach run
+```
+python eval_script.py --checkpoint './eval_models/CurriculumParams.pkl'
+```
 
 
 

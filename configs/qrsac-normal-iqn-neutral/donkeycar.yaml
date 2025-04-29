@@ -12,7 +12,7 @@ expl_env_num: 1
 layer_size: 256 
 num_quantiles: 32
 use_ae: true
-ae_path: "/mnt/c/Users/natha/OneDrive/Documents/Cursor/QRSAC/logs/ae-32_1745884521_best.pkl"  
+ae_path: "./logs/ae-32_1745884521_best.pkl"  
 replay_buffer_size: 100000 #ASSUMPTION 2 : supplement says 10e+6 and paper says 10e+7
 trainer_kwargs:
   alpha: 0.1 

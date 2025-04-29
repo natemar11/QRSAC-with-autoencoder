@@ -10,12 +10,12 @@ from simple_ae_wrapper import SimpleAEWrapper
 
 def main():
     parser = argparse.ArgumentParser(description='Evaluate DonkeyCar Policy')
-    parser.add_argument('--checkpoint', type=str, default='./eval_models/params.pkl',
+    parser.add_argument('--checkpoint', type=str, default='./eval_models/CurriculumParams.pkl',
                       help='Path to the checkpoint file')
     parser.add_argument('--ae-path', type=str, 
-                      default='/mnt/c/Users/natha/OneDrive/Documents/Cursor/QRSAC/logs/ae-32_1745884521_best.pkl',
+                      default='./logs/ae-32_1745884521_best.pkl',
                       help='Path to the autoencoder checkpoint')
-    parser.add_argument('--max-steps', type=int, default=1000,
+    parser.add_argument('--max-steps', type=int, default=4000,
                       help='Maximum number of steps to run')
     args = parser.parse_args()
 

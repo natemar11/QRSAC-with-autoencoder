@@ -1,3 +1,5 @@
+#Adapted from https://github.com/araffin/aae-train-donkeycar record_data.py
+
 """
 Simple script to manually record data
 by driving around manually using pgyame controls.
