@@ -35,9 +35,9 @@ To use you autoencoder replace `ae_path` in `configs/donkeycar.yaml` with `logs/
 
 ## Standard vs Curriculum Learning Approach
 By default the training will run 450 epochs. The curriculum learning training will run three stages of training of 150 epochs each. The three stages have the following descriptions:
-    Stage 0: BEGINNER STAGE: Focus on basic track following with slight reward for speed
-    Stage 1: INTERMEDIATE STAGE: Introducing more speed while maintaining track position
-    Stage 2: ADVANCED STAGE: Optimizing for speed
+- Stage 0: BEGINNER STAGE: Focus on basic track following with slight reward for speed
+- Stage 1: INTERMEDIATE STAGE: Introducing more speed while maintaining track position
+- Stage 2: ADVANCED STAGE: Optimizing for speed
 
 The specific changes to the reward function can be found in `curriculum.py'
 
