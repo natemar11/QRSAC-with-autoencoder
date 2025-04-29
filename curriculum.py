@@ -9,8 +9,8 @@ class SimpleEpochCurriculum:
         
         # Stage descriptions for logging
         self.stage_descriptions = {
-            0: "BEGINNER STAGE: Focus on basic track following with no reward for speed",
-            1: "INTERMEDIATE STAGE: Introducing speed while maintaining track position",
+            0: "BEGINNER STAGE: Focus on basic track following with slight reward for speed",
+            1: "INTERMEDIATE STAGE: Introducing more speed while maintaining track position",
             2: "ADVANCED STAGE: Optimizing for speed"
         }
         
@@ -18,19 +18,19 @@ class SimpleEpochCurriculum:
         self.curriculum_params = {
             # Stage 0: Beginner
             0: {
-                "speed_reward_weight": 0.2,
+                "speed_reward_weight": 0.1,
                 "max_cte_error": 4.5,
                 "track_width_factor": 1.2
             },
             # Stage 1: Intermediate
             1: {
-                "speed_reward_weight": 0.3,
+                "speed_reward_weight": 0.5,
                 "max_cte_error": 3.0,
                 "track_width_factor": 1.0
             },
             # Stage 2: Final
             2: {
-                "speed_reward_weight": 0.5,
+                "speed_reward_weight": 0.9,
                 "max_cte_error": 2.0,
                 "track_width_factor": 0.8
             }
@@ -48,6 +48,7 @@ class SimpleEpochCurriculum:
         print(f"Current Epoch: {self.current_epoch}")
         print(f"Epochs in this stage: {self.current_epoch} - {self.current_epoch + self.epochs_per_stage - 1}")
         print(f"Parameters for this stage:")
+        print(f"  - Speed Reward Weight: {params['speed_reward_weight']}")
         print(f"  - Max CTE Error: {params['max_cte_error']}")
         print(f"  - Track Width Factor: {params['track_width_factor']}")
         print("="*80 + "\n")
@@ -111,8 +112,9 @@ class SimpleEpochCurriculum:
             stage = self.get_current_stage()
             
             if stage == 0:
-                # Stage 1: Focus on staying on track
-                return position_reward
+                # Stage 1: Focus on staying on track (slight incentive for speed)
+                speed_reward = env.forward_vel*curr_params["speed_reward_weight"]
+                return position_reward + speed_reward
             
             elif stage == 1:
                 # Stage 2: Start considering speed but with lower weight
