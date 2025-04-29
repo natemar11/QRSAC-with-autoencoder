@@ -20,11 +20,16 @@ from gym.envs.registration import register
 import gym
 import gym_donkeycar
 
+from curriculum import SimpleEpochCurriculum
+
 torch.set_num_threads(4)
 torch.set_num_interop_threads(4)
 
 # Store the single donkey car environment globally
 _donkey_env = None
+
+# Create global curriculum instance
+_curriculum = None
 
 def get_singleton_donkey_env(variant):
     """Create or return the single DonkeyCar environment instance"""
@@ -83,6 +88,38 @@ def get_dummy_env(env, use_ae=False, ae_path=None):
         return AutoencoderWrapper(env, ae_path=ae_path)
     return env
 
+def get_curriculum(enabled=True):
+    global _curriculum
+    if _curriculum is None:
+        _curriculum = SimpleEpochCurriculum(epochs_per_stage=150, enabled=enabled)
+    return _curriculum
+
+# Create a version of TorchVecOnlineRLAlgorithm that handles curriculum
+class CurriculumAwareRLAlgorithm(TorchVecOnlineRLAlgorithm):
+    def __init__(self, use_curriculum=False, **kwargs):
+        super().__init__(**kwargs)
+        self.use_curriculum = use_curriculum
+        if use_curriculum:
+            self.curriculum = get_curriculum(enabled=True)
+            print("Curriculum learning enabled with 150 epochs per stage")
+        else:
+            self.curriculum = get_curriculum(enabled=False)
+            print("Standard training mode (curriculum disabled)")
+    
+    def _end_epoch(self, epoch):
+        # Call parent implementation
+        super()._end_epoch(epoch)
+        
+        # Update curriculum if enabled
+        if self.use_curriculum:
+            stage_changed = self.curriculum.advance_epoch()
+            
+            # If stage changed, apply new parameters to environment
+            if stage_changed:
+                # Apply to singleton environment
+                self.curriculum.apply_to_env(self.eval_env.envs[0])
+                self.curriculum.apply_to_env(self.expl_env.envs[0])
+
 def experiment(variant):
     # Create the singleton environment
     singleton_getter = lambda: get_singleton_donkey_env(variant)
@@ -96,6 +133,14 @@ def experiment(variant):
     
     eval_env = VectorEnv([lambda: SingletonProxyEnv(singleton_getter) 
                           for _ in range(variant['eval_env_num'])])
+    
+    # Apply curriculum if enabled when setting up environment
+    use_curriculum = variant.get("use_curriculum", False)
+    if use_curriculum:
+        curriculum = get_curriculum(enabled=True)
+        # Apply initial curriculum settings to environments
+        for env in [dummy_env] + expl_env.envs + eval_env.envs:
+            curriculum.apply_to_env(env)
     
     # The rest of your QRSAC setup remains unchanged
     obs_dim = expl_env.observation_space.low.size
@@ -184,7 +229,8 @@ def experiment(variant):
         num_quantiles=num_quantiles,
         **variant['trainer_kwargs'],
     )
-    algorithm = TorchVecOnlineRLAlgorithm(
+    algorithm = CurriculumAwareRLAlgorithm(
+        use_curriculum=use_curriculum,
         trainer=trainer,
         exploration_env=expl_env,
         evaluation_env=eval_env,
@@ -196,18 +242,28 @@ def experiment(variant):
     algorithm.to(ptu.device)
     algorithm.train()
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Quantile-Regression Soft Actor Critic')
     parser.add_argument('--config', type=str, default="configs/lunarlander.yaml")
     parser.add_argument('--gpu', type=int, default=0, help="using cpu with -1")
     parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('-m', '--mode', type=str, choices=['standard', 'curriculum'], 
+                        default='standard', help="Training mode: standard or curriculum")
     args = parser.parse_args()
+    
+    # Load config
     with open(args.config, 'r', encoding="utf-8") as f:
         variant = yaml.load(f, Loader=yaml.FullLoader)
-    variant["seed"] = 100 #args.seed
-    log_prefix = "_".join(["qrsac", variant["env"][:-3].lower(), str(variant["version"])])
+    
+    # Add mode to variant
+    variant["mode"] = args.mode
+    variant["use_curriculum"] = (args.mode == 'curriculum')
+    
+    # Setup logging with mode in prefix
+    log_prefix = "_".join(["qrsac", variant["env"][:-3].lower(), 
+                          str(variant["version"]), args.mode])
     setup_logger(log_prefix, variant=variant, seed=args.seed)
+    
     if args.gpu >= 0:
         ptu.set_gpu_mode(True, args.gpu)
     set_seed(args.seed)
