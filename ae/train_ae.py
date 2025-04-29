@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 from ae.autoencoder import Autoencoder
 from ae.data_loader import DataLoader
-from config import INPUT_DIM, ROI
+from ae.ae_config import INPUT_DIM, ROI
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-ae", "--ae-path", help="Path to saved autoencoder (otherwise start from scratch)", type=str)

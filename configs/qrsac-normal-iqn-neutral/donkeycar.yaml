@@ -1,16 +1,18 @@
 algorithm_kwargs:
   batch_size: 256 
-  max_path_length: 6000 
+  max_path_length: 4000 
   min_num_steps_before_training: 400 
-  num_epochs: 1000 
-  num_eval_paths_per_epoch: 10
+  num_epochs: 450 
+  num_eval_paths_per_epoch: 7
   num_expl_steps_per_train_loop: 1 
   num_trains_per_train_loop: 1 
-env: jetracer_env
+env: donkey-generated-roads-v0
 eval_env_num: 1 
 expl_env_num: 1 
 layer_size: 256 
 num_quantiles: 32
+use_ae: true
+ae_path: "/mnt/c/Users/natha/OneDrive/Documents/Cursor/QRSAC/logs/ae-32_1745884521_best.pkl"  
 replay_buffer_size: 100000 #ASSUMPTION 2 : supplement says 10e+6 and paper says 10e+7
 trainer_kwargs:
   alpha: 0.1 

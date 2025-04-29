@@ -5,8 +5,8 @@ from multiprocessing import Process, Pipe
 
 from rlkit.envs.env_utils import CloudpickleWrapper
 #donkeycar
-# from ae.autoencoder import Autoencoder
-# from ae.autoencoder import load_ae
+from ae.autoencoder import Autoencoder
+from ae.autoencoder import load_ae
 
 
 class BaseVectorEnv(ABC, gym.Wrapper):
@@ -52,9 +52,9 @@ class BaseVectorEnv(ABC, gym.Wrapper):
 
     @abstractmethod
     def step(self, action):
-        """Run one timestep of all the environments’ dynamics. When the end of
+        """Run one timestep of all the environments' dynamics. When the end of
         episode is reached, you are responsible for calling reset(id) to reset
-        this environment’s state.
+        this environment's state.
 
         Accept a batch of action and return a tuple (obs, rew, done, info).
 
@@ -106,7 +106,7 @@ class VectorEnv(BaseVectorEnv):
         self.observation_space = self.envs[0].observation_space
         self.action_space = self.envs[0].action_space
         #donkeycar
-        # ae_path= "/home/pipelines/pipeline2/aae-train-donkeycar/logs/ae-32_1704492161_best.pkl"
+        # ae_path= "/mnt/c/Users/natha/OneDrive/Documents/Cursor/QRSAC/logs/ae-32_1745874108_best.pkl"
         # self.ae = load_ae(ae_path)
     def reset(self, id=None):
         if id is None:
@@ -123,7 +123,7 @@ class VectorEnv(BaseVectorEnv):
                 self._obs[i] = self.envs[i].reset()
                 # donkeycar 
                 # self._obs[i] = self.ae.encode_from_raw_image(self.envs[i].reset()[:,:,::-1])
-                #donkeycar if additional obs data appended
+                # #donkeycar if additional obs data appended
                 # self._obs[i] = np.concatenate((self.ae.encode_from_raw_image(self.envs[i].reset()[:, :, ::-1]), np.zeros(7).reshape(1, -1)), axis=1) #if 7 mo
 
         return self._obs
@@ -273,3 +273,49 @@ class SubprocVectorEnv(BaseVectorEnv):
         for p in self.processes:
             p.join()
         return result
+
+# Create a modified VectorEnv class that shares a single environment
+class SharedCarVectorEnv(BaseVectorEnv):
+    """Vector environment that uses the same underlying car for all instances"""
+    
+    def __init__(self, env_fn, num_envs):
+        super().__init__([env_fn] * num_envs)  # Still create the expected structure
+        # But only instantiate one actual environment
+        self.shared_env = env_fn()
+        self.observation_space = self.shared_env.observation_space
+        self.action_space = self.shared_env.action_space
+        self.num_envs = num_envs
+        
+    def reset(self, id=None):
+        # Reset the shared environment only once
+        obs = self.shared_env.reset()
+        # Return the same observation for all environments
+        self._obs = np.stack([obs] * self.num_envs)
+        return self._obs
+        
+    def step(self, actions):
+        # Take only the first action (or average them if you prefer)
+        action = actions[0]  # Use first environment's action
+        # Or use average: action = np.mean(actions, axis=0)
+        
+        # Step the shared environment once
+        obs, reward, done, info = self.shared_env.step(action)
+        
+        # Return the same result for all environments
+        self._obs = np.stack([obs] * self.num_envs)
+        self._rewards = np.stack([reward] * self.num_envs)
+        self._dones = np.stack([done] * self.num_envs)
+        self._infos = np.stack([info] * self.num_envs)
+        
+        return self._obs, self._rewards, self._dones, self._infos
+        
+    def render(self, **kwargs):
+        return self.shared_env.render(**kwargs)
+        
+    def seed(self, seed=None):
+        if seed is not None:
+            return self.shared_env.seed(seed)
+        return None
+        
+    def close(self):
+        return self.shared_env.close()

@@ -23,22 +23,22 @@ class TorchReplayBuffer(ReplayBuffer):
         self._max_replay_buffer_size = max_replay_buffer_size
 
 
-        self._observations = torch.zeros((max_replay_buffer_size, observation_dim), dtype=torch.float).pin_memory()
+        self._observations = torch.zeros((max_replay_buffer_size, observation_dim), dtype=torch.float)
         # It's a bit memory inefficient to save the observations twice,
         # but it makes the code *much* easier since you no longer have to
         # worry about termination conditions.
-        self._next_obs = torch.zeros((max_replay_buffer_size, observation_dim), dtype=torch.float).pin_memory()
-        self._actions = torch.zeros((max_replay_buffer_size, action_dim), dtype=torch.float).pin_memory()
+        self._next_obs = torch.zeros((max_replay_buffer_size, observation_dim), dtype=torch.float)
+        self._actions = torch.zeros((max_replay_buffer_size, action_dim), dtype=torch.float)
         # Make everything a 2D np array to make it easier for other code to
         # reason about the shape of the data
-        self._rewards = torch.zeros((max_replay_buffer_size, 1), dtype=torch.float).pin_memory()
+        self._rewards = torch.zeros((max_replay_buffer_size, 1), dtype=torch.float)
         # self._terminals[i] = a terminal was received at time i
-        self._terminals = torch.zeros((max_replay_buffer_size, 1), dtype=torch.float).pin_memory()
+        self._terminals = torch.zeros((max_replay_buffer_size, 1), dtype=torch.float)
         # Define self._env_infos[key][i] to be the return value of env_info[key]
         # at time i
         self._env_infos = {}
         for key, size in env_info_sizes.items():
-            self._env_infos[key] = torch.zeros((max_replay_buffer_size, size), dtype=torch.float).pin_memory()
+            self._env_infos[key] = torch.zeros((max_replay_buffer_size, size), dtype=torch.float)
         self._env_info_keys = env_info_sizes.keys()
 
         self._top = 0
@@ -49,6 +49,13 @@ class TorchReplayBuffer(ReplayBuffer):
             self.batch = None
 
     def add_sample(self, observation, action, reward, next_observation, terminal, env_info, **kwargs):
+        # Flatten observation if it's multi-dimensional
+        #NEW
+        if isinstance(observation, np.ndarray) and len(observation.shape) > 1:
+            observation = observation.flatten()
+        
+        if isinstance(next_observation, np.ndarray) and len(next_observation.shape) > 1:
+            next_observation = next_observation.flatten()
 
         self._observations[self._top] = torch.from_numpy(observation)
         if not isinstance(action, np.ndarray):

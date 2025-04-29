@@ -12,7 +12,7 @@ import cv2  # pytype: disable=import-error
 import numpy as np
 from tqdm import tqdm
 
-from config import ENTER_KEY, EXIT_KEYS, LEFT_KEY, RIGHT_KEY
+from ae.ae_config import ENTER_KEY, EXIT_KEYS, LEFT_KEY, RIGHT_KEY
 
 parser = argparse.ArgumentParser(description="Split a video into a sequence of images")
 parser.add_argument("-i", "--input_video", help="Input Video", default="", type=str, required=True)

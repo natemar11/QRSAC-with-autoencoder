@@ -7,7 +7,7 @@ from rlkit.data_management.path_builder import PathBuilder
 from rlkit.samplers.data_collector.base import DataCollector
 from rlkit.envs.vecenv import BaseVectorEnv
 #donkeycar
-# from ae.autoencoder import load_ae
+from ae.autoencoder import load_ae
 import os
 import pandas as pd
 
@@ -36,7 +36,7 @@ class VecMdpStepCollector(DataCollector):
         self._num_paths_total = 0
         self._obs = None  # cache variable
         #donkeycar
-        # ae_path = "/home/pipelines/pipeline2/aae-train-donkeycar/logs/ae-32_1704492161_best.pkl"
+        # ae_path = "/mnt/c/Users/natha/OneDrive/Documents/Cursor/QRSAC/logs/ae-32_1745874108_best.pkl"
         # self.ae = load_ae(ae_path)
 
     def get_epoch_paths(self):
@@ -120,7 +120,7 @@ class VecMdpStepCollector(DataCollector):
             obs = self._obs[env_idx].copy()
             #donkeycar
             # obs = obs.reshape((1,obs.shape[0]))
-            #obs = self.ae.encode_from_raw_image(obs[:, :, ::-1])
+            # obs = self.ae.encode_from_raw_image(obs[:, :, ::-1])
 
             terminal = np.array([terminal])
             reward = np.array([reward])

@@ -8,7 +8,7 @@ from rlkit.envs.vecenv import BaseVectorEnv
 from rlkit.samplers.data_collector.base import DataCollector
 
 #donkeycar
-# from ae.autoencoder import load_ae
+from ae.autoencoder import load_ae
 import os
 import pandas as pd
 
@@ -36,7 +36,7 @@ class VecMdpPathCollector(DataCollector):
         self._num_paths_total = 0
         self._obs = None  # cache variable
         #donkeycar
-        # ae_path = "/home/pipelines/pipeline2/aae-train-donkeycar/logs/ae-32_1704492161_best.pkl"
+        # ae_path = "/mnt/c/Users/natha/OneDrive/Documents/Cursor/QRSAC/logs/ae-32_1745874108_best.pkl"
         # self.ae = load_ae(ae_path)
 
     def get_epoch_paths(self):
@@ -134,9 +134,9 @@ class VecMdpPathCollector(DataCollector):
         if env_idx is None:
             self._current_path_builders = [PathBuilder() for _ in range(self._env_num)]
             self._obs = self._env.reset()
-            # donkeycar
+            # # donkeycar
             # self._obs = self.ae.encode_from_raw_image(np.squeeze(self._obs[:, :, ::-1]))
-            #donkeycar if additional ata appended to obs
+            # #donkeycar if additional ata appended to obs
             # self._obs = np.concatenate((self._obs, np.zeros(7).reshape(1, -1)), axis=1)
 
         else:

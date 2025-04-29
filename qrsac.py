@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import torch
 
@@ -6,7 +7,7 @@ import rlkit.torch.pytorch_util as ptu
 import yaml
 from rlkit.data_management.torch_replay_buffer import TorchReplayBuffer
 from rlkit.envs import make_env
-from rlkit.envs.vecenv import SubprocVectorEnv, VectorEnv
+from rlkit.envs.vecenv import SubprocVectorEnv, VectorEnv, SharedCarVectorEnv
 from rlkit.launchers.launcher_util import set_seed, setup_logger
 from rlkit.samplers.data_collector import (VecMdpPathCollector, VecMdpStepCollector)
 from rlkit.torch.qrsac.qrsac import QRSACTrainer
@@ -16,25 +17,92 @@ from rlkit.torch.sac.policies import MakeDeterministic, TanhGaussianPolicy
 from rlkit.torch.torch_rl_algorithm import TorchVecOnlineRLAlgorithm
 
 from gym.envs.registration import register
+import gym
+import gym_donkeycar
 
 torch.set_num_threads(4)
 torch.set_num_interop_threads(4)
 
+# Store the single donkey car environment globally
+_donkey_env = None
 
-def get_dummy_env(dummy_env):
-    return dummy_env
+def get_singleton_donkey_env(variant):
+    """Create or return the single DonkeyCar environment instance"""
+    global _donkey_env
+    
+    if _donkey_env is None:
+        env_name = variant['env']
+        
+        # Configure DonkeyCar to use one simulator instance
+        sim_params = {
+            "DONKEY_SIM_PATH": os.environ.get("DONKEY_SIM_PATH", "remote"),
+            "SIM_HOST": "localhost",
+            "SIM_PORT": 9091,  # Use a single port
+            "HEADLESS": False,
+            "MAX_CTE_ERROR": 10.0
+        }
+        
+        # Create only one environment
+        env = gym.make(env_name, conf=sim_params)
+        
+        # Apply standard wrappers
+        from rlkit.envs.wrappers import CustomInfoEnv, NormalizedBoxEnv
+        env = CustomInfoEnv(env)
+        env = NormalizedBoxEnv(env)
+        
+        # Apply autoencoder wrapper if needed
+        use_ae = variant.get('use_ae', False)
+        ae_path = variant.get('ae_path', None)
+        if use_ae and ae_path:
+            from simple_ae_wrapper import SimpleAEWrapper
+            env = SimpleAEWrapper(env, ae_path)
+        
+        _donkey_env = env
+    
+    return _donkey_env
+
+# Create a proxy environment that delegates to the singleton
+class SingletonProxyEnv(gym.Wrapper):
+    def __init__(self, env_getter):
+        self.env_getter = env_getter
+        env = self.env_getter()  # Get the environment
+        super().__init__(env)
+        
+    def reset(self):
+        return self.env_getter().reset()
+        
+    def step(self, action):
+        return self.env_getter().step(action)
+        
+    def render(self):
+        return self.env_getter().render()
+
+def get_dummy_env(env, use_ae=False, ae_path=None):
+    if use_ae and ae_path is not None:
+        from ae.wrapper import AutoencoderWrapper
+        return AutoencoderWrapper(env, ae_path=ae_path)
+    return env
+
 def experiment(variant):
-
-    dummy_env = make_env(variant['env'])
-    expl_env = VectorEnv([lambda: get_dummy_env(dummy_env) for _ in range(variant['expl_env_num'])])
+    # Create the singleton environment
+    singleton_getter = lambda: get_singleton_donkey_env(variant)
+    
+    # Use proxy environments that all delegate to the singleton
+    dummy_env = singleton_getter()
+    
+    # Create vector envs that use proxies to the same underlying environment
+    expl_env = VectorEnv([lambda: SingletonProxyEnv(singleton_getter) 
+                          for _ in range(variant['expl_env_num'])])
+    
+    eval_env = VectorEnv([lambda: SingletonProxyEnv(singleton_getter) 
+                          for _ in range(variant['eval_env_num'])])
+    
+    # The rest of your QRSAC setup remains unchanged
     obs_dim = expl_env.observation_space.low.size
     action_dim = expl_env.action_space.low.size
     print(f"obs dim, action dim={obs_dim}, {action_dim}")
-
-    expl_env.seed(variant["seed"])
-    expl_env.action_space.seed(variant["seed"])
-    eval_env=VectorEnv([lambda: get_dummy_env(dummy_env) for _ in range(variant['eval_env_num'])])
-    eval_env.seed(variant["seed"])
+    
+    # Continue with network architecture and training setup...
 
     M = variant['layer_size']
     num_quantiles = variant['num_quantiles']
