@@ -63,5 +63,5 @@ To test the final policy for the curriculum learning approach run
 python eval_script.py --checkpoint './eval_models/CurriculumParams.pkl'
 ```
 
-
+<img src='./readme_media/DonkeyGo.gif'>
 
