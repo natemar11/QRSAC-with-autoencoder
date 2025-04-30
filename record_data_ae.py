@@ -1,4 +1,4 @@
-#Adapted from https://github.com/araffin/aae-train-donkeycar record_data.py
+#Adapted from https://github.com/araffin/aae-train-donkeycar/blob/master/record_data.py
 
 """
 Simple script to manually record data

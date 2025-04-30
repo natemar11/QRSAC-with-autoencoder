@@ -11,6 +11,10 @@ This repository uses and is heavily adapted from [[Code]](https://github.com/shi
 - python 3.10+
 - All dependencies are available in requirements.txt and environment.yml
 
+## Simulator setup
+This experiment uses the interface and simulator binaries found in [[Repo]](https://github.com/tawnkramer/gym-donkeycar)
+
+
 ## Usage
 To run donkeycar you can write your experiment settings in configs/donkeycar.yaml and run with 
 ```
@@ -23,6 +27,8 @@ Set `--mode curriculum`, your program will use the curriculum learning framework
 This approach uses an autoencoder which can be found under `/logs/ae-32_1745884521_best.pkl`
 
 ## Autoencoder Setup
+Autoencoder setup is based on original QRSAC repository [Repo](https://github.com/shilpa2301/QRSAC) and `record_data_ae.py` is adapted from [Repo](https://github.com/araffin/aae-train-donkeycar) 
+
 To train your own autoencoder to then use for training first run
 ```
 python record_data_ae.py -f {your desired save folder}
@@ -39,7 +45,7 @@ By default the training will run 450 epochs. The curriculum learning training wi
 - Stage 1: INTERMEDIATE STAGE: Introducing more speed while maintaining track position
 - Stage 2: ADVANCED STAGE: Optimizing for speed
 
-The specific changes to the reward function can be found in `curriculum.py'
+The specific changes to the reward function can be found in `curriculum.py`
 
 The stage 2 (final) reward function is identical to the reward function used for all 450 eopchs in the standard approach
 
